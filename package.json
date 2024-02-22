@@ -1,0 +1,25 @@
+{
+  "name": "api-builder",
+  "version": "1.0.0",
+  "description": "A utility by United Effects to help rapidly design a REST api.",
+  "main": "index.js",
+  "author": "United Effects, Inc.",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "nodemon ./index.js",
+    "schemas": "node ./schemas.js",
+    "generate": "node ./generate.js",
+    "show": "node ./showObject.js"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^9.0.9",
+    "js-yaml": "^4.1.0",
+    "json-schema-resolve-allof": "^1.5.0",
+    "nodemon": "^2.0.20",
+    "swagger-ui-dist": "^4.15.5"
+  },
+  "nodemonConfig": {
+    "ext": "js,json,yml,yaml"
+  }
+}

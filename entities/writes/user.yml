@@ -1,0 +1,23 @@
+---
+title: User
+description: This object describes the input for a user.
+type: object
+properties:
+  name:
+    $ref: ../common.yml#/definitions/name
+  email:
+    type: string
+    format: email
+  phoneNumbers:
+    type: array
+    items:
+      $ref: ../common.yml#/definitions/phone
+  homeAddress:
+    $ref: ../common.yml#/definitions/address
+  socialNetworks:
+    type: array
+    items:
+      $ref: ../common.yml#/definitions/social
+  active:
+    type: boolean
+    default: true

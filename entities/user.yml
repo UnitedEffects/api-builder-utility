@@ -1,0 +1,8 @@
+---
+title: userObject
+description: This object describes users.
+type: object
+allOf:
+  - $ref: common.yml#/definitions/general
+  - $ref: writes/user.yml
+  - $ref: access.yml

@@ -1,0 +1,10 @@
+---
+title: permissionObject
+description: This object describes users.
+type: object
+allOf:
+  - $ref: writes/permission.yml
+properties:
+  id:
+    type: string
+    format: uuid

@@ -1,0 +1,452 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Example API Specification
+  description: This is a simple example of an API specification generated through the api-builder utility. This is not intended to communicate any form of actual integration. Any similarity to an existing API is purely coincidental.
+  x-logo:
+    url: https://pbs.twimg.com/profile_images/1626704165391986695/L8FY5-H7_400x400.jpg
+tags:
+  - name: Users
+    description: Example User API - not specific to any system
+  - name: Permissions
+    description: Unrealistic User Permission API - not specific to any system
+  - name: System
+    description: system data
+
+paths:
+  # Users
+  /user:
+    post:
+      tags:
+        - Users
+      summary: Create a user
+      description: Create a user with a unique ID
+      operationId: writeUser
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writeUser'
+        description: Log data to be written
+        required: true
+    get:
+      tags:
+        - Users
+      summary: Retrieve, filter, and paginate all users in the system
+      description: 'Uses oData filtering to retrieve users. You will need to use <a href="https://www.odata.org/">oData syntax.</a>'
+      operationId: getUsers
+      parameters:
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/userObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+  /user/{id}:
+    get:
+      tags:
+        - Users
+      summary: Find a user with their ID
+      description: Returns a user with a given ID
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          description: id of user type to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+    delete:
+      tags:
+        - Users
+      summary: Delete a user
+      description: Permanently removes a user with the given ID.
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          description: id of user to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: successful operation
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+    patch:
+      tags:
+        - Users
+      summary: Patch an existing user
+      description: 'Patch an existing user to update the record - <a href="https://jsonpatch.com/">JSON Patch</a>'
+      operationId: patchLog
+      parameters:
+        - name: id
+          in: path
+          description: id of user to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/userObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonPatch'
+        description: JSON Patch specific to your user object
+        required: true
+
+  #Permissions
+  /user/{userId}/tenant/{tenantId}/permission:
+    post:
+      tags:
+        - Permissions
+      summary: Add a single permission to a user
+      description: Add a single permission to the total list of permission for a user
+      operationId: writePermission
+      parameters:
+        - name: userId
+          in: path
+          description: id of user
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: path
+          description: id of tenant for the permission
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/permissionObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/writePermission'
+        description: Log data to be written
+        required: true
+    get:
+      tags:
+        - Permissions
+      summary: Retrieve, filter, and paginate all permissions of a user
+      description: This will work similarly to the get all users filtering, but may require additional middleware depending on how permissions are persisted.
+      operationId: getPermissions
+      parameters:
+        - name: userId
+          in: path
+          description: id of user to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: path
+          description: id of tenant for the permission
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: $filter
+          in: query
+          description: oData filter Query
+          required: false
+          schema:
+            type: string
+        - name: $select
+          in: query
+          description: oData select Query
+          required: false
+          schema:
+            type: string
+        - name: $orderby
+          in: query
+          description: oData orderby Query
+          required: false
+          schema:
+            type: string
+        - name: $skip
+          in: query
+          description: oData skip Query
+          required: false
+          schema:
+            type: string
+        - name: $top
+          in: query
+          description: oData top Query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/accessObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+  /user/{userId}/tenant/{tenantId}/permission/{id}:
+    get:
+      tags:
+        - Permissions
+      summary: Find a permission by ID for a given user and tenant
+      description: Returns the permission corresponding to the tenant and permissionID
+      operationId: getPermission
+      parameters:
+        - name: userId
+          in: path
+          description: id of user
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: path
+          description: id of tenant for the permission
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          description: id of permission to return
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/permissionObject'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+    delete:
+      tags:
+        - Permissions
+      summary: Delete a permission from a user and tenant
+      description: Permanently removes a permission from a user
+      operationId: deletePermission
+      parameters:
+        - name: userId
+          in: path
+          description: id of user
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: tenantId
+          in: path
+          description: id of tenant for the permission
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: id
+          in: path
+          description: id of user to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: successful operation
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+        '500':
+          description: internal error
+
+
+  # System
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Health check
+      responses:
+        '200':
+          description: GET successful
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+
+#Global Security
+security:
+  - bearer: []
+
+servers:
+  - url: http://localhost:3000/api
+
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: 'Bearer based tokens, simply enter the token (prefixing with "bearer" is not required).'
+    basicAuth:
+      type: http
+      scheme: basic
+    openId:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            admin: Grants access to admin operations
+  schemas:
+    error:
+      required:
+        - id
+        - error
+        - message
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: unique ID for the error
+        error:
+          type: string
+          description: type of error
+        message:
+          type: string
+          description: additional information about the error

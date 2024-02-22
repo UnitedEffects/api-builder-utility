@@ -1,0 +1,12 @@
+---
+title: tenantPermissionObject
+description: This object describes a user permission specific to a tenant.
+type: object
+properties:
+  tenantId:
+    type: string
+    format: uuid
+  permissions:
+    type: array
+    items:
+      $ref: permission.yml

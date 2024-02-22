@@ -1,0 +1,9 @@
+---
+title: accessObject
+description: This object describes all tenant based permissions for a user.
+type: object
+properties:
+  access:
+    type: array
+    items:
+      $ref: tenantPermission.yml

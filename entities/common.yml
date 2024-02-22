@@ -1,0 +1,192 @@
+---
+title: commonObjects
+definitions:
+  social:
+    type: array
+    items:
+      type: object
+      properties:
+        network:
+          type: string
+          enum:
+            - website
+            - twitter
+            - facebook
+            - linkedin
+            - instagram
+            - snapchat
+            - other
+        url:
+          type: string
+          format: uri
+
+  address:
+    type: object
+    properties:
+      streetAddress1:
+        type: string
+      streetAddress2:
+        type: string
+      addressCity:
+        type: string
+      addressRegion:
+        type: string
+        description: this could be a state
+      addressPostalCode:
+        type: string
+      addressCountry:
+        type: string
+
+  phone:
+    type: object
+    properties:
+      countryCode:
+        type: string
+      number:
+        type: string
+      type:
+        type: string
+        enum:
+          - cell
+          - home
+          - office
+          - other
+
+  name:
+    type: object
+    properties:
+      title:
+        type: string
+      first:
+        type: string
+      middle:
+        type: string
+      family:
+        type: string
+      suffix:
+        type: string
+
+  general:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+      created:
+        type: string
+        format: date-time
+      createdBy:
+        type: string
+        format: uuid
+      modified:
+        type: string
+        format: date-time
+      modifiedBy:
+        type: string
+        format: uuid
+
+  error:
+    required:
+      - id
+      - error
+      - message
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: unique ID for the error
+      error:
+        type: string
+        description: type of error
+      message:
+        type: string
+        description: additional information about the error
+
+  jsonPatch:
+    additionalProperties: false
+    description: Details for JSONPatch can be found at http://jsonpatch.com/
+    type: array
+    items:
+      type: object
+      description: Reference the update model for the full paths to update
+      oneOf:
+        - required:
+            - op
+            - path
+            - value
+          properties:
+            op:
+              type: string
+              enum: [ 'replace', 'add', 'remove', 'test' ]
+            path:
+              type: string
+              description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+            value:
+              type: object
+              description: 'The object, array or object to set the property at the above path to'
+        - required:
+            - op
+            - path
+            - value
+          properties:
+            op:
+              type: string
+              enum: [ 'replace', 'add', 'remove', 'test' ]
+            path:
+              type: string
+              description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+            value:
+              type: string
+              description: 'The string, array or object to set the property at the above path to'
+        - required:
+            - op
+            - path
+            - value
+          properties:
+            op:
+              type: string
+              enum: [ 'replace', 'add', 'remove', 'test' ]
+            path:
+              type: string
+              description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+            value:
+              type: boolean
+        - required:
+            - op
+            - path
+            - value
+          properties:
+            op:
+              type: string
+              enum: [ 'replace', 'add', 'remove', 'test' ]
+            path:
+              type: string
+              description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+            value:
+              type: integer
+              description: 'The integer, array or object to set the property at the above path to'
+        - required:
+            - op
+            - path
+          properties:
+            op:
+              type: string
+              enum: [ 'remove' ]
+            path:
+              type: string
+              description: 'A path to the property in the data model. For example /name/firstName or /emails/-'
+        - required:
+            - op
+            - from
+            - path
+          properties:
+            op:
+              type: string
+              enum: [ 'copy', 'move' ]
+            from:
+              type: string
+              description: 'Path to copy or move from'
+            path:
+              type: string
+              description: 'Path to copy or move to'
+

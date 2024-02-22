@@ -1,0 +1,10 @@
+---
+title: permission
+description: This object describes the input for a permission.
+type: object
+properties:
+  productId:
+    type: string
+    format: uuid
+  permission:
+    type: string
