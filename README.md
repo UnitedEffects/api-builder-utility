@@ -20,9 +20,9 @@ NOTE: "Try it out" will not work here as there is no underlying mock server. Thi
 
 All models should be created under the ./entities/ folder. The general approach is that an input version of the object is created under ./entities/writes/ to represent the properties required to write the data object, followed by a full object version of the same model under ./entities/ which references the input object to create a complete model.
 As an example:
-* ./entities/writes/region.yml, is a JSON schema representation of what would be necessary to define a Region.
-* If you then look at ./entities/regions.yml, you will see that it consists of all properties from ./entities/common.yml and ./entities/writes/region.yml.
-* This concatenation of properties allows for a full definition of the Region Object while ensuring that some properties of that definition are user defined while others are derived from the underlying system.
+* ./entities/writes/user.yml, is a JSON schema representation of what would be necessary to define a User.
+* If you then look at ./entities/user.yml, you will see that it consists of all properties from ./entities/common.yml and ./entities/writes/user.yml.
+* This concatenation of properties allows for a full definition of the User Object while ensuring that some properties of that definition are user defined while others are derived from the underlying system.
 
 ## JSON Schema and Open API
 
@@ -47,11 +47,11 @@ Here are some examples of the pattern to guide you. Note that common is a little
 * "../common.yml#/definitions/address" --> "#/components/schemas/address"
 * "common.yml#/definitions/general" --> "#/components/schemas/general"
 * When referencing an object under ./entities/writes:
-    * "writes/property.yml" --> "#/components/schemas/writeProperty"
-    * "writes/unit.yml" --> "#/components/schemas/writeUnit"
+    * "writes/user.yml" --> "#/components/schemas/writeUser"
+    * "writes/permission.yml" --> "#/components/schemas/writePermission"
 * When referencing an object under ./entities:
-    * "properties.yml" --> "#/components/schemas/propertiesObject"
-    * "units.yml" --> "#/components/schemas/unitsObject"
+    * "access.yml" --> "#/components/schemas/accessObject"
+    * "tenantPermission.yml" --> "#/components/schemas/tenantPermissionObject"
 
 ### Just the Specification
 
