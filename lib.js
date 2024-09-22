@@ -7,10 +7,20 @@ let parser = new Ref();
 const factory = {
     async parseEntities() {
         let schemas = {};
-        // Start with Common
-        const data = await fs.promises.readFile('./entities/common.yml');
-        const obj = yml.load(data);
-        Object.assign(schemas, obj.definitions);
+        const objs = await fs.promises.readdir('./entities');
+
+        // Start with Common(s)
+        await Promise.all(objs.map(async (w) => {
+            // ignore everything but yaml and skip common
+            if(w.toLowerCase().includes('common.yml')) {
+                const data = await fs.promises.readFile(`./entities/${w}`);
+                const obj = yml.load(data);
+                let objDefs = JSON.parse(JSON.stringify(obj.definitions).replace(/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
+                objDefs = await fixRefs(objDefs);
+                Object.assign(schemas, objDefs);
+            }
+        }))
+
         // Get all writes
         const writes = await fs.promises.readdir('./entities/writes');
         await Promise.all(writes.map(async (w) => {
@@ -22,23 +32,22 @@ const factory = {
                 obj[name] = yml.load(data);
                 if(obj[name] !== null) {
                     // Fix common references
-                    obj = JSON.parse(JSON.stringify(obj).replace(/\.\.\/common\.yml#\/definitions/g, '#/components/schemas'));
+                    obj = JSON.parse(JSON.stringify(obj).replace(/\.\.\/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
                     obj = await fixRefs(obj, true);
                     Object.assign(schemas, obj)
                 }
             }
         }))
         // Get all Objects
-        const objs = await fs.promises.readdir('./entities');
         await Promise.all(objs.map(async (w) => {
             // ignore everything but yaml and skip common
-            if(w.includes('.yml') && w !== 'common.yml') {
+            if(w.toLowerCase().includes('.yml') && !w.toLowerCase().includes('common.yml')) {
                 const data = await fs.promises.readFile(`./entities/${w}`);
                 const name = `${w.replace('.yml', '')}Object`;
                 let obj = {};
                 obj[name] = yml.load(data);
-                if(obj[name] === null) console.info(name);
-                obj = JSON.parse(JSON.stringify(obj).replace(/common\.yml#\/definitions/g, '#/components/schemas'));
+                if(obj[name] === null) console.info('obj[name] was null: ', name);
+                obj = JSON.parse(JSON.stringify(obj).replace(/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
                 obj = await fixRefs(obj);
                 Object.assign(schemas, obj)
             }

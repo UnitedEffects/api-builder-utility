@@ -24,6 +24,16 @@ As an example:
 * If you then look at ./entities/user.yml, you will see that it consists of all properties from ./entities/common.yml and ./entities/writes/user.yml.
 * This concatenation of properties allows for a full definition of the User Object while ensuring that some properties of that definition are user defined while others are derived from the underlying system.
 
+## Grouping Common Objects
+
+You can create as many groupings of common objects as you like and they will be blended into the spec for reference. Common groupings take multiple object definitions and put them into a single yaml file. You must use the syntax "[name]Common.yaml" where "name" is whatever you'd like to call the group. There can only one "common.yml". Examples:
+* userCommon.yml
+* accessCommon.yml
+* common.yml (only one common.yml is allowed)
+
+**NOTE:** This approach merges all common objects into the OpenAPI schema components section. You must avoid duplicate naming even across different grouping files.
+See the example common.yml for syntax.
+
 ## JSON Schema and Open API
 
 All definitions should be written in JSON Schema and all efforts should be made to ensure the definitions are compatible with the OpenAPI 3.0 specification. You can read more about JSON Schema and OpenAPI here:
@@ -46,6 +56,7 @@ Here are some examples of the pattern to guide you. Note that common is a little
 
 * "../common.yml#/definitions/address" --> "#/components/schemas/address"
 * "common.yml#/definitions/general" --> "#/components/schemas/general"
+* "userCommon.yml#/definitions/name" --> "#/components/schemas/name"
 * When referencing an object under ./entities/writes:
     * "writes/user.yml" --> "#/components/schemas/writeUser"
     * "writes/permission.yml" --> "#/components/schemas/writePermission"
