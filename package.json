@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@apidevtools/json-schema-ref-parser": "^9.0.9",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "json-schema-resolve-allof": "^1.5.0",
     "nodemon": "^2.0.20",
     "swagger-ui-dist": "^4.15.5"
