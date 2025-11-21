@@ -11,7 +11,7 @@ const sui = '<!DOCTYPE html>\n' +
     '      content="SwaggerUI"\n' +
     '    />\n' +
     '    <title>UE API BUILDER</title>\n' +
-    '    <link href="https://assets-global.website-files.com/63ddcf880e4a61a502e3f165/63fbaa5d3efb721efd4b1af0_Favicon.png" rel="shortcut icon" type="image/x-icon">\n' +
+    '    <link href="https://www.ue.ventures/assets/ad9b1f00-267b-47c7-930b-651f833bdef9" rel="shortcut icon" type="image/x-icon">\n' +
     '    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />\n' +
     '  </head>\n' +
     '  <body>\n' +
@@ -38,7 +38,7 @@ const redoc = '<!DOCTYPE html>\n' +
     '<html>\n' +
     '  <head>\n' +
     '    <title>UE API BUILDER DOCS</title>\n' +
-    '    <link href="https://assets-global.website-files.com/63ddcf880e4a61a502e3f165/63fbaa5d3efb721efd4b1af0_Favicon.png" rel="shortcut icon" type="image/x-icon">\n' +
+    '    <link href="https://www.ue.ventures/assets/ad9b1f00-267b-47c7-930b-651f833bdef9" rel="shortcut icon" type="image/x-icon">\n' +
     '    <!-- needed for adaptive design -->\n' +
     '    <meta charset="utf-8"/>\n' +
     '    <meta name="viewport" content="width=device-width, initial-scale=1">\n' +

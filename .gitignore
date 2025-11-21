@@ -108,3 +108,6 @@ dist
 scrap/
 openApi.yml
 openApiSchemas.yml
+openApiSchemas-OLD.yml
+openApiPaths-OLD.yml
+API_REFERENCE.md
