@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Example API Specification
+  description: This is a simple example of an API specification generated through the api-builder utility. This is not intended to communicate any form of actual integration. Any similarity to an existing API is purely coincidental.
+  x-logo:
+    url: https://www.ue.ventures/assets/ad9b1f00-267b-47c7-930b-651f833bdef9
+tags:
+  - name: Users
+    description: Example User API - not specific to any system
+  - name: Permissions
+    description: Unrealistic User Permission API - not specific to any system
+  - name: System
+    description: system data
+
+#Global Security
+security:
+  - bearer: []
+
+servers:
+  - url: http://localhost:3000/api

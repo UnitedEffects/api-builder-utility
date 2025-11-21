@@ -7,14 +7,29 @@ let parser = new Ref();
 const factory = {
     async parseEntities() {
         let schemas = {};
-        const objs = await fs.promises.readdir('./entities');
+        let objs;
+
+        try {
+            objs = await fs.promises.readdir('./entities');
+        } catch (error) {
+            throw new Error(`Failed to read entities directory: ${error.message}`);
+        }
 
         // Start with Common(s)
         await Promise.all(objs.map(async (w) => {
             // ignore everything but yaml and skip common
             if(w.toLowerCase().includes('common.yml')) {
-                const data = await fs.promises.readFile(`./entities/${w}`);
-                const obj = yml.load(data);
+                let data, obj;
+                try {
+                    data = await fs.promises.readFile(`./entities/${w}`);
+                } catch (error) {
+                    throw new Error(`Failed to read file 'entities/${w}': ${error.message}`);
+                }
+                try {
+                    obj = yml.load(data);
+                } catch (error) {
+                    throw new Error(`Invalid YAML syntax in 'entities/${w}': ${error.message}`);
+                }
                 let objDefs = JSON.parse(JSON.stringify(obj.definitions).replace(/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
                 objDefs = await fixRefs(objDefs);
                 Object.assign(schemas, objDefs);
@@ -22,14 +37,28 @@ const factory = {
         }))
 
         // Get all writes
-        const writes = await fs.promises.readdir('./entities/writes');
+        let writes;
+        try {
+            writes = await fs.promises.readdir('./entities/writes');
+        } catch (error) {
+            throw new Error(`Failed to read entities/writes directory: ${error.message}`);
+        }
         await Promise.all(writes.map(async (w) => {
             // ignore everything but yaml
             if(w.includes('.yml')) {
-                const data = await fs.promises.readFile(`./entities/writes/${w}`);
+                let data, obj;
                 const name = `write${w.charAt(0).toUpperCase()}${w.slice(1).replace('.yml', '')}`;
-                let obj = {};
-                obj[name] = yml.load(data);
+                try {
+                    data = await fs.promises.readFile(`./entities/writes/${w}`);
+                } catch (error) {
+                    throw new Error(`Failed to read file 'entities/writes/${w}': ${error.message}`);
+                }
+                try {
+                    obj = {};
+                    obj[name] = yml.load(data);
+                } catch (error) {
+                    throw new Error(`Invalid YAML syntax in 'entities/writes/${w}': ${error.message}`);
+                }
                 if(obj[name] !== null) {
                     // Fix common references
                     obj = JSON.parse(JSON.stringify(obj).replace(/\.\.\/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
@@ -42,10 +71,19 @@ const factory = {
         await Promise.all(objs.map(async (w) => {
             // ignore everything but yaml and skip common
             if(w.toLowerCase().includes('.yml') && !w.toLowerCase().includes('common.yml')) {
-                const data = await fs.promises.readFile(`./entities/${w}`);
+                let data, obj;
                 const name = `${w.replace('.yml', '')}Object`;
-                let obj = {};
-                obj[name] = yml.load(data);
+                try {
+                    data = await fs.promises.readFile(`./entities/${w}`);
+                } catch (error) {
+                    throw new Error(`Failed to read file 'entities/${w}': ${error.message}`);
+                }
+                try {
+                    obj = {};
+                    obj[name] = yml.load(data);
+                } catch (error) {
+                    throw new Error(`Invalid YAML syntax in 'entities/${w}': ${error.message}`);
+                }
                 if(obj[name] === null) console.info('obj[name] was null: ', name);
                 obj = JSON.parse(JSON.stringify(obj).replace(/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
                 obj = await fixRefs(obj);
@@ -55,14 +93,53 @@ const factory = {
         return schemas;
     },
     async genSchema() {
-        const schemas = await this.parseEntities();
-        if(fs.existsSync('./openApiSchemas.yml')) {
-            await fs.promises.unlink('./openApiSchemas.yml');
+        try {
+            const schemas = await this.parseEntities();
+            if(fs.existsSync('./openApiSchemas.yml')) {
+                await fs.promises.unlink('./openApiSchemas.yml');
+            }
+            await fs.promises.writeFile('./openApiSchemas.yml', yml.dump(schemas));
+        } catch (error) {
+            throw new Error(`Schema generation failed: ${error.message}`);
         }
-        await fs.promises.writeFile('./openApiSchemas.yml', yml.dump(schemas));
     },
     async buildSwag() {
-        const swag = yml.load(await fs.promises.readFile('./openApiPaths.yml'));
+        let swag = {};
+
+        // Load paths from paths/ directory
+        try {
+            const pathFiles = await fs.promises.readdir('./paths');
+            const pathPromises = pathFiles
+                .filter(f => f.endsWith('Paths.yml'))
+                .map(async (f) => {
+                    try {
+                        const data = await fs.promises.readFile(`./paths/${f}`);
+                        return yml.load(data);
+                    } catch (error) {
+                        throw new Error(`Failed to load paths file 'paths/${f}': ${error.message}`);
+                    }
+                });
+
+            const pathObjects = await Promise.all(pathPromises);
+            swag.paths = Object.assign({}, ...pathObjects);
+
+            // Load metadata if it exists
+            if (fs.existsSync('./paths/_metadata.yml')) {
+                try {
+                    const metaData = await fs.promises.readFile('./paths/_metadata.yml');
+                    const metadata = yml.load(metaData);
+                    Object.assign(swag, metadata);
+                } catch (error) {
+                    throw new Error(`Failed to load metadata file 'paths/_metadata.yml': ${error.message}`);
+                }
+            }
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                throw new Error(`Paths directory './paths' not found. Please create it and add *Paths.yml files.`);
+            }
+            throw error;
+        }
+
         const schemas = await this.parseEntities();
         // setup swagger spec component section if it's not there...
         if(!swag.components) swag.components = {
@@ -102,11 +179,15 @@ const factory = {
 
     },
     async genSpec() {
-        const swag = await this.buildSwag();
-        if(fs.existsSync('./openApi.yml')) {
-            await fs.promises.unlink('./openApi.yml');
+        try {
+            const swag = await this.buildSwag();
+            if(fs.existsSync('./openApi.yml')) {
+                await fs.promises.unlink('./openApi.yml');
+            }
+            await fs.promises.writeFile('./openApi.yml', yml.dump(swag));
+        } catch (error) {
+            throw new Error(`Spec generation failed: ${error.message}`);
         }
-        await fs.promises.writeFile('./openApi.yml', yml.dump(swag));
     },
     async showObject(path) {
         try {

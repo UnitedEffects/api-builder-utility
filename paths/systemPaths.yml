@@ -1,0 +1,15 @@
+/health:
+  get:
+    tags:
+      - System
+    summary: Health check
+    description: Health check
+    responses:
+      '200':
+        description: GET successful
+      '500':
+        description: Internal server error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/error'

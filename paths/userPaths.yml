@@ -1,0 +1,174 @@
+/user:
+  post:
+    tags:
+      - Users
+    summary: Create a user
+    description: Create a user with a unique ID
+    operationId: writeUser
+    responses:
+      '201':
+        description: successful operation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userObject'
+      '400':
+        description: bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/error'
+      '500':
+        description: internal error
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/writeUser'
+      description: Log data to be written
+      required: true
+  get:
+    tags:
+      - Users
+    summary: Retrieve, filter, and paginate all users in the system
+    description: 'Uses oData filtering to retrieve users. You will need to use <a href="https://www.odata.org/">oData syntax.</a>'
+    operationId: getUsers
+    parameters:
+      - name: $filter
+        in: query
+        description: oData filter Query
+        required: false
+        schema:
+          type: string
+      - name: $select
+        in: query
+        description: oData select Query
+        required: false
+        schema:
+          type: string
+      - name: $orderby
+        in: query
+        description: oData orderby Query
+        required: false
+        schema:
+          type: string
+      - name: $skip
+        in: query
+        description: oData skip Query
+        required: false
+        schema:
+          type: string
+      - name: $top
+        in: query
+        description: oData top Query
+        required: false
+        schema:
+          type: string
+    responses:
+      '200':
+        description: successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/userObject'
+      '400':
+        description: bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/error'
+      '500':
+        description: internal error
+/user/{id}:
+  get:
+    tags:
+      - Users
+    summary: Find a user with their ID
+    description: Returns a user with a given ID
+    operationId: getUser
+    parameters:
+      - name: id
+        in: path
+        description: id of user type to return
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: successful operation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userObject'
+      '400':
+        description: bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/error'
+      '500':
+        description: internal error
+  delete:
+    tags:
+      - Users
+    summary: Delete a user
+    description: Permanently removes a user with the given ID.
+    operationId: deleteUser
+    parameters:
+      - name: id
+        in: path
+        description: id of user to delete
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: successful operation
+      '400':
+        description: bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/error'
+      '500':
+        description: internal error
+  patch:
+    tags:
+      - Users
+    summary: Patch an existing user
+    description: 'Patch an existing user to update the record - <a href="https://jsonpatch.com/">JSON Patch</a>'
+    operationId: patchLog
+    parameters:
+      - name: id
+        in: path
+        description: id of user to update
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '201':
+        description: successful operation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/userObject'
+      '400':
+        description: bad request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/error'
+      '500':
+        description: internal error
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/jsonPatch'
+      description: JSON Patch specific to your user object
+      required: true
