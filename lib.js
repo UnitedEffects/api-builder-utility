@@ -4,6 +4,9 @@ const Ref = require("@apidevtools/json-schema-ref-parser");
 const merge = require('json-schema-resolve-allof');
 let parser = new Ref();
 
+const YAML_EXT = /\.ya?ml$/i;
+const baseName = (file) => file.replace(YAML_EXT, '');
+
 const factory = {
     async parseEntities() {
         let schemas = {};
@@ -18,7 +21,7 @@ const factory = {
         // Start with Common(s)
         await Promise.all(objs.map(async (w) => {
             // ignore everything but yaml and skip common
-            if(w.toLowerCase().includes('common.yml')) {
+            if(/common\.ya?ml$/i.test(w)) {
                 let data, obj;
                 try {
                     data = await fs.promises.readFile(`./entities/${w}`);
@@ -30,7 +33,7 @@ const factory = {
                 } catch (error) {
                     throw new Error(`Invalid YAML syntax in 'entities/${w}': ${error.message}`);
                 }
-                let objDefs = JSON.parse(JSON.stringify(obj.definitions).replace(/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
+                let objDefs = JSON.parse(JSON.stringify(obj.definitions).replace(/[a-z]*common\.ya?ml#\/definitions/gi, '#/components/schemas'));
                 objDefs = await fixRefs(objDefs);
                 Object.assign(schemas, objDefs);
             }
@@ -45,9 +48,10 @@ const factory = {
         }
         await Promise.all(writes.map(async (w) => {
             // ignore everything but yaml
-            if(w.includes('.yml')) {
+            if(YAML_EXT.test(w)) {
                 let data, obj;
-                const name = `write${w.charAt(0).toUpperCase()}${w.slice(1).replace('.yml', '')}`;
+                const base = baseName(w);
+                const name = `write${base.charAt(0).toUpperCase()}${base.slice(1)}`;
                 try {
                     data = await fs.promises.readFile(`./entities/writes/${w}`);
                 } catch (error) {
@@ -61,7 +65,7 @@ const factory = {
                 }
                 if(obj[name] !== null) {
                     // Fix common references
-                    obj = JSON.parse(JSON.stringify(obj).replace(/\.\.\/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
+                    obj = JSON.parse(JSON.stringify(obj).replace(/\.\.\/[a-z]*common\.ya?ml#\/definitions/gi, '#/components/schemas'));
                     obj = await fixRefs(obj, true);
                     Object.assign(schemas, obj)
                 }
@@ -70,9 +74,9 @@ const factory = {
         // Get all Objects
         await Promise.all(objs.map(async (w) => {
             // ignore everything but yaml and skip common
-            if(w.toLowerCase().includes('.yml') && !w.toLowerCase().includes('common.yml')) {
+            if(YAML_EXT.test(w) && !/common\.ya?ml$/i.test(w)) {
                 let data, obj;
-                const name = `${w.replace('.yml', '')}Object`;
+                const name = `${baseName(w)}Object`;
                 try {
                     data = await fs.promises.readFile(`./entities/${w}`);
                 } catch (error) {
@@ -84,8 +88,11 @@ const factory = {
                 } catch (error) {
                     throw new Error(`Invalid YAML syntax in 'entities/${w}': ${error.message}`);
                 }
-                if(obj[name] === null) console.info('obj[name] was null: ', name);
-                obj = JSON.parse(JSON.stringify(obj).replace(/[a-z]*common\.yml#\/definitions/gi, '#/components/schemas'));
+                if(obj[name] === null || obj[name] === undefined) {
+                    console.warn(`Skipping empty entity file 'entities/${w}'`);
+                    return;
+                }
+                obj = JSON.parse(JSON.stringify(obj).replace(/[a-z]*common\.ya?ml#\/definitions/gi, '#/components/schemas'));
                 obj = await fixRefs(obj);
                 Object.assign(schemas, obj)
             }
@@ -108,26 +115,34 @@ const factory = {
 
         // Load paths from paths/ directory
         try {
-            const pathFiles = await fs.promises.readdir('./paths');
-            const pathPromises = pathFiles
-                .filter(f => f.endsWith('Paths.yml'))
-                .map(async (f) => {
-                    try {
-                        const data = await fs.promises.readFile(`./paths/${f}`);
-                        return yml.load(data);
-                    } catch (error) {
-                        throw new Error(`Failed to load paths file 'paths/${f}': ${error.message}`);
-                    }
-                });
+            const pathFiles = (await fs.promises.readdir('./paths')).filter(f => /Paths\.ya?ml$/.test(f));
+            const pathObjects = await Promise.all(pathFiles.map(async (f) => {
+                try {
+                    const data = await fs.promises.readFile(`./paths/${f}`);
+                    return yml.load(data) || {};
+                } catch (error) {
+                    throw new Error(`Failed to load paths file 'paths/${f}': ${error.message}`);
+                }
+            }));
 
-            const pathObjects = await Promise.all(pathPromises);
-            swag.paths = Object.assign({}, ...pathObjects);
+            swag.paths = {};
+            pathObjects.forEach((pObj, i) => {
+                Object.keys(pObj).forEach((p) => {
+                    if (swag.paths[p]) console.warn(`Warning: duplicate path '${p}' in 'paths/${pathFiles[i]}' overrides an earlier definition`);
+                    swag.paths[p] = pObj[p];
+                });
+            });
 
             // Load metadata if it exists
-            if (fs.existsSync('./paths/_metadata.yml')) {
+            const metaFile = ['./paths/_metadata.yml', './paths/_metadata.yaml'].find(f => fs.existsSync(f));
+            if (metaFile) {
                 try {
-                    const metaData = await fs.promises.readFile('./paths/_metadata.yml');
-                    const metadata = yml.load(metaData);
+                    const metaData = await fs.promises.readFile(metaFile);
+                    const metadata = yml.load(metaData) || {};
+                    if (metadata.paths) {
+                        console.warn(`Warning: 'paths' in '_metadata.yml' is ignored; define paths in *Paths.yml files`);
+                        delete metadata.paths;
+                    }
                     Object.assign(swag, metadata);
                 } catch (error) {
                     throw new Error(`Failed to load metadata file 'paths/_metadata.yml': ${error.message}`);
@@ -201,45 +216,48 @@ const factory = {
 
 function fixWrite(ref) {
     if(typeof ref === 'string') {
-        const parts = ref.split('/');
-        const obj = parts[parts.length-1];
-        return `#/components/schemas/write${obj.charAt(0).toUpperCase()}${obj.slice(1).replace('.yml', '')}`
+        const obj = baseName(ref.split('/').pop());
+        return `#/components/schemas/write${obj.charAt(0).toUpperCase()}${obj.slice(1)}`
     }
     return ref;
 }
 
 function fixObj(ref, writeLocal = false) {
     if(typeof ref === 'string') {
+        const obj = baseName(ref.split('/').pop());
         if(writeLocal === true) {
-            return `#/components/schemas/write${ref.charAt(0).toUpperCase()}${ref.slice(1).replace('.yml', '')}`
+            return `#/components/schemas/write${obj.charAt(0).toUpperCase()}${obj.slice(1)}`
         }
-        return `#/components/schemas/${ref.replace('.yml', '')}Object`
+        return `#/components/schemas/${obj}Object`
     }
     return ref;
 }
 
 async function fixRefs(obj, localToWrites = false) {
+    if (obj === null || typeof obj !== 'object') return obj;
     const out = JSON.parse(JSON.stringify(obj));
-    await Promise.allSettled(Object.keys(obj).map(async (key) => {
-        if(key === '$ref') {
+    await Promise.all(Object.keys(obj).map(async (key) => {
+        if(key === '$ref' && typeof obj[key] === 'string' && YAML_EXT.test(obj[key])) {
             if(obj[key].includes('writes/')) {
+                // e.g. writes/user.yml or ../writes/user.yml -> writeUser
                 out[key] = fixWrite(obj[key]);
-            }
-            if(!obj[key].includes('/') && obj[key].includes('.yml')) {
+            } else if(!obj[key].includes('/')) {
+                // e.g. user.yml -> userObject, or writeUser when inside ./entities/writes
                 out[key] = fixObj(obj[key], localToWrites);
+            } else if(obj[key].startsWith('../')) {
+                // e.g. ../user.yml from a write entity -> userObject
+                out[key] = fixObj(obj[key], false);
             }
         }
-        if(typeof obj[key] === 'object') {
+        if(obj[key] !== null && typeof obj[key] === 'object') {
             if(Array.isArray(obj[key])) {
-                await Promise.allSettled(obj[key].map(async (o, i) => {
-                    out[key][i] = await fixRefs(o);
-                    return o;
+                await Promise.all(obj[key].map(async (o, i) => {
+                    out[key][i] = await fixRefs(o, localToWrites);
                 }))
             } else {
-                out[key] = await fixRefs(obj[key]);
+                out[key] = await fixRefs(obj[key], localToWrites);
             }
         }
-        return key;
     }));
     return out;
 }

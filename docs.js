@@ -8,15 +8,24 @@ const fs = require('fs');
         let markdown = '# API Reference\n\n';
         markdown += 'This reference shows all available schemas and their component names for use in path definitions.\n\n';
 
-        // Separate schemas by type
+        // Separate schemas by type, based on the actual source files
+        const isYaml = f => /\.ya?ml$/i.test(f);
+        const base = f => f.replace(/\.ya?ml$/i, '');
+        const writeNames = new Set((await fs.promises.readdir('./entities/writes'))
+            .filter(isYaml)
+            .map(f => `write${base(f).charAt(0).toUpperCase()}${base(f).slice(1)}`));
+        const objectNames = new Set((await fs.promises.readdir('./entities'))
+            .filter(f => isYaml(f) && !/common\.ya?ml$/i.test(f))
+            .map(f => `${base(f)}Object`));
+
         const writeSchemas = [];
         const objectSchemas = [];
         const commonSchemas = [];
 
         Object.keys(schemas).forEach(key => {
-            if (key.startsWith('write')) {
+            if (writeNames.has(key)) {
                 writeSchemas.push(key);
-            } else if (key.endsWith('Object')) {
+            } else if (objectNames.has(key)) {
                 objectSchemas.push(key);
             } else {
                 commonSchemas.push(key);

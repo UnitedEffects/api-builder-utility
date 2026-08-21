@@ -1,0 +1,12 @@
+/user:
+  post:
+    summary: duplicate path key, overridden by userPaths.yml
+    responses:
+      '201':
+        description: created
+/health:
+  get:
+    summary: health
+    responses:
+      '200':
+        description: ok

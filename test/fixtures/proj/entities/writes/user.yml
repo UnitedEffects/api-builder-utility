@@ -1,0 +1,14 @@
+---
+title: User
+description: Input for a user.
+type: object
+properties:
+  name:
+    type: string
+    default: null
+  address:
+    $ref: ../common.yml#/definitions/address
+  profile:
+    $ref: profile.yml
+  tag:
+    $ref: ../tag.yml
