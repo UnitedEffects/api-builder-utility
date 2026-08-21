@@ -1,0 +1,14 @@
+---
+definitions:
+  label:
+    type: object
+    properties:
+      value:
+        type: string
+      text:
+        $ref: extraCommon.yml#/definitions/labelText
+  labelText:
+    type: string
+  writeToken:
+    description: a common definition whose name happens to start with "write"
+    type: string

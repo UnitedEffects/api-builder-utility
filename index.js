@@ -61,15 +61,22 @@ const redoc = '<!DOCTYPE html>\n' +
     '</html>'
 
 http.createServer( async function (req, res) {
-    if(req.url.includes('/openapi.json')) {
-        const json = await lib.buildSwag();
-        res.writeHead(200);
-        res.end(JSON.stringify(json));
-    } else if(req.url.includes('/doc')) {
-        res.writeHead(200);
+    const { pathname } = new URL(req.url, 'http://localhost');
+    if(pathname === '/openapi.json') {
+        try {
+            const json = await lib.buildSwag();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(json));
+        } catch (error) {
+            console.error(error.message);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
+        }
+    } else if(pathname === '/doc' || pathname === '/doc/') {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(redoc);
     } else {
-        res.writeHead(200);
+        res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(sui);
     }
 }).listen(3000);

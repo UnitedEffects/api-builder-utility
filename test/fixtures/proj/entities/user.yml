@@ -1,0 +1,8 @@
+---
+title: userObject
+description: Full user object.
+type: object
+allOf:
+  - $ref: common.yml#/definitions/general
+  - $ref: writes/user.yml
+  - $ref: tag.yml

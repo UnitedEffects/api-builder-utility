@@ -1,0 +1,7 @@
+---
+title: tagObject
+description: A tag.
+type: object
+properties:
+  label:
+    $ref: extraCommon.yml#/definitions/label

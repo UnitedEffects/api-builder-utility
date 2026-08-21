@@ -1,0 +1,3 @@
+/ignored:
+  get:
+    summary: this file does not end in Paths.yml and must be ignored

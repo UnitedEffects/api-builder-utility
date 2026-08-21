@@ -1,0 +1,7 @@
+---
+title: Legacy
+description: Uses the .yaml extension.
+type: object
+properties:
+  note:
+    type: string

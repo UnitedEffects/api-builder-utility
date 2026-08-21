@@ -1,0 +1,7 @@
+---
+title: Profile
+description: Input for a profile.
+type: object
+properties:
+  bio:
+    type: string
